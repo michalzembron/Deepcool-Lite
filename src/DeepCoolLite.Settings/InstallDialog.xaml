@@ -1,0 +1,32 @@
+<Window x:Class="DeepCoolLite.Settings.InstallDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="DeepCool Lite" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+    <StackPanel Margin="24" MaxWidth="460">
+        <TextBlock FontSize="20" FontWeight="SemiBold" Text="Install the DeepCool Lite service" Margin="0,0,0,12" />
+        <TextBlock TextWrapping="Wrap" Margin="0,0,0,16">
+            The service runs in the background and sends CPU data to the cooler display. It will be installed to
+            Program Files and started automatically with Windows. Windows will ask for administrator rights once.
+        </TextBlock>
+
+        <Border Style="{StaticResource Card}" MinHeight="0">
+            <CheckBox x:Name="DesktopShortcut" IsChecked="True" Content="Create a desktop shortcut" />
+        </Border>
+
+        <Border x:Name="DisableDeepCoolCard" Style="{StaticResource Card}" MinHeight="0">
+            <StackPanel>
+                <CheckBox x:Name="DisableDeepCool" IsChecked="True"
+                          Content="Disable autostart of the official DeepCool app (recommended)" />
+                <TextBlock Style="{StaticResource CardDescription}" Margin="28,4,0,0"
+                           Text="When both apps run, they both send data to the display and the values flicker. Uninstalling DeepCool Lite restores the autostart." />
+            </StackPanel>
+        </Border>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Content="Install" IsDefault="True" Style="{DynamicResource AccentButtonStyle}" MinWidth="110"
+                    Click="Install_Click" Margin="0,0,8,0" />
+            <Button Content="Not now" IsCancel="True" MinWidth="110" />
+        </StackPanel>
+    </StackPanel>
+</Window>

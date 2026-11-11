@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DeepCoolLite.Core/DeepCoolLite.Core.csproj" />
+    <Project Path="src/DeepCoolLite.Service/DeepCoolLite.Service.csproj" />
+    <Project Path="src/DeepCoolLite.Settings/DeepCoolLite.Settings.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DeepCoolLite.Tests/DeepCoolLite.Tests.csproj" />
+  </Folder>
+</Solution>

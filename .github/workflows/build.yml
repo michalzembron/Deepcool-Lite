@@ -1,0 +1,45 @@
+name: Build
+
+# Every push / pull request: build and test.
+# A tag like v1.0.0: also publish both exes and create a GitHub release with them.
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+permissions:
+  contents: write # creating releases
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Test
+        run: dotnet test DeepCoolLite.slnx -c Release
+
+      - name: Publish
+        shell: pwsh
+        run: |
+          $version = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME.TrimStart('v') } else { '' }
+          ./build/publish.ps1 -Version $version
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DeepCoolLite
+          path: artifacts/publish/*.exe
+
+      - name: Release
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create $env:GITHUB_REF_NAME artifacts/publish/DeepCoolLite.exe artifacts/publish/DeepCoolLite-SelfContained.exe `
+            --title "DeepCool Lite $env:GITHUB_REF_NAME" --generate-notes

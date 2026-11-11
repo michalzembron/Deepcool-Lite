@@ -1,0 +1,58 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <!-- The one exe people download: settings window + installer -->
+    <AssemblyName>DeepCoolLite</AssemblyName>
+    <RootNamespace>DeepCoolLite.Settings</RootNamespace>
+    <!-- ThemeMode (Fluent theme) is still marked as an experimental API -->
+    <NoWarn>$(NoWarn);WPF0001</NoWarn>
+    <!-- Self-contained WPF has a few native DLLs; keep the download a single file -->
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.ServiceProcess.ServiceController" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="System.IO" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DeepCoolLite.Core\DeepCoolLite.Core.csproj" />
+  </ItemGroup>
+
+  <!--
+    Release only (dotnet publish): publish the service as a single exe with the same flavour
+    (framework-dependent / self-contained), zip it and embed it - the installer extracts it to Program Files.
+    Development builds have no payload; installing from them is not supported.
+  -->
+  <PropertyGroup>
+    <ServicePayloadDir>$([MSBuild]::NormalizeDirectory($(MSBuildProjectDirectory), $(BaseIntermediateOutputPath), 'payload', $(SelfContained)))</ServicePayloadDir>
+    <ServicePayloadZip>$([MSBuild]::NormalizePath($(MSBuildProjectDirectory), $(BaseIntermediateOutputPath), 'payload', 'Service-$(SelfContained).zip'))</ServicePayloadZip>
+  </PropertyGroup>
+
+  <Target Name="EmbedServicePayload" BeforeTargets="PrepareForBuild" Condition="'$(_IsPublishing)' == 'true'">
+    <RemoveDir Directories="$(ServicePayloadDir)" />
+    <PropertyGroup>
+      <_ServiceProps>Configuration=$(Configuration);SelfContained=$(SelfContained);_IsPublishing=true</_ServiceProps>
+    </PropertyGroup>
+    <!-- Restore runs in its own evaluation (unique session id), as MSBuild requires -->
+    <MSBuild Projects="..\DeepCoolLite.Service\DeepCoolLite.Service.csproj" Targets="Restore"
+             Properties="$(_ServiceProps);MSBuildRestoreSessionId=$([System.Guid]::NewGuid())" />
+    <MSBuild Projects="..\DeepCoolLite.Service\DeepCoolLite.Service.csproj" Targets="Publish"
+             Properties="$(_ServiceProps);PublishDir=$(ServicePayloadDir)" />
+    <ItemGroup>
+      <!-- Debug symbols and Mono.Posix native helpers (used by LibreHardwareMonitor on Linux only) are not shipped -->
+      <_PayloadJunk Include="$(ServicePayloadDir)*.pdb;$(ServicePayloadDir)*MonoPosixHelper.dll" />
+    </ItemGroup>
+    <Delete Files="@(_PayloadJunk)" />
+    <ZipDirectory SourceDirectory="$(ServicePayloadDir)" DestinationFile="$(ServicePayloadZip)" Overwrite="true" />
+    <ItemGroup>
+      <EmbeddedResource Include="$(ServicePayloadZip)" LogicalName="ServicePayload.zip" />
+    </ItemGroup>
+  </Target>
+</Project>
